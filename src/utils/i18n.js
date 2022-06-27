@@ -3,11 +3,11 @@ import { AVAILABLE_LOCALES, FALLBACK_LOCALES } from "../assets/locales/locale_co
 
 // These are set in the admin panel and are only included as fallbacks.
 const defaultLocaleData = {
-  "app-name": "App",
+  "app-name": "Live VR Captions",
   "editor-name": "Scene Editor",
-  "contact-email": "app@company.com",
-  "company-name": "Company",
-  "share-hashtag": "#app",
+  "contact-email": "xr.research1@gallaudet.edu",
+  "company-name": "XR Research @ Gallaudet",
+  "share-hashtag": "#Gallaudet",
   "app-description": "Gather share and collaborate together in a virtual, private and safe space",
   "app-tagline": "Private social VR in your web browser"
 };
