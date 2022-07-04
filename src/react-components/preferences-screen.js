@@ -363,6 +363,10 @@ const preferenceLabels = defineMessages({
     id: "preferences-screen.preference.avatar-volumes",
     defaultMessage: "Stored avatar volumes"
   },
+  captionType1: {
+    id: "preferences-screen.preference.caption-type-1",
+    defaultMessage: "Caption Type 1"
+  },
   disableSoundEffects: {
     id: "preferences-screen.preference.disable-sound-effects",
     defaultMessage: "Disable Sound Effects"
@@ -1026,6 +1030,10 @@ class PreferencesScreen extends Component {
               id: "preferences-screen.preference.avatar-volumes.entries",
               defaultMessage: "Entries"
             })
+          },
+          {
+            key: "captionType1",
+            prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
           },
           {
             key: "disableSoundEffects",

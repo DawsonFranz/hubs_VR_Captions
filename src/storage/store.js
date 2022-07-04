@@ -123,6 +123,8 @@ export const SCHEMA = {
         snapRotationDegrees: { type: "number", default: 45 },
         materialQualitySetting: { type: "string", default: defaultMaterialQuality },
         enableDynamicShadows: { type: "bool", default: false },
+        // Adding custom caption types to the preferences menu
+        captionType1: { type: "bool", default: false },
         disableSoundEffects: { type: "bool", default: false },
         disableMovement: { type: "bool", default: false },
         disableBackwardsMovement: { type: "bool", default: false },

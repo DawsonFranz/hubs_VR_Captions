@@ -2,6 +2,7 @@ import "./utils/configs";
 import { getAbsoluteHref } from "./utils/media-url-utils";
 import { isValidSceneUrl } from "./utils/scene-url-utils";
 import { spawnChatMessage } from "./react-components/chat-message";
+import { spawnCaptionMessage } from "./react-components/closed-captions";
 import { SOUND_CHAT_MESSAGE, SOUND_QUACK, SOUND_SPECIAL_QUACK } from "./systems/sound-effects-system";
 import ducky from "./assets/models/DuckyMesh.glb";
 import { EventTarget } from "event-target-shim";
@@ -80,6 +81,21 @@ export default class MessageDispatch extends EventTarget {
     const captureSystem = this.scene.systems["capture-system"];
 
     switch (command) {
+
+      // Write /note <whatever you want> to spawn a 2D image with the text
+      // Also discovered that this can be done without modification in normal hubs by CTRL+Enter or clicking Create button after writing something
+      case "note":
+        if (args[0]) {
+            const sentence = args.join(" ");
+            spawnChatMessage(sentence);
+        }
+        break;
+      case "caption":
+        if (args[0]) {
+            const sentence = args.join(" ");
+            spawnCaptionMessage(sentence);
+        }
+        break;
       case "fly":
         if (this.scene.systems["hubs-systems"].characterController.fly) {
           this.scene.systems["hubs-systems"].characterController.enableFly(false);
@@ -108,7 +124,6 @@ export default class MessageDispatch extends EventTarget {
             break;
           }
         }
-
         break;
       case "leave":
         this.entryManager.exitScene();

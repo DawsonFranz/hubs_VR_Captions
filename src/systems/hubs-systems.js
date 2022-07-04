@@ -34,6 +34,8 @@ import { AudioZonesSystem } from "./audio-zones-system";
 import { GainSystem } from "./audio-gain-system";
 import { EnvironmentSystem } from "./environment-system";
 import { NameTagVisibilitySystem } from "./name-tag-visibility-system";
+// MOD: Added iframe system event listener to run its tick method in the hubs-systems AFrame order
+import { IframeSystem } from "./iframe-system";
 
 AFRAME.registerSystem("hubs-systems", {
   init() {
@@ -77,6 +79,8 @@ AFRAME.registerSystem("hubs-systems", {
     this.gainSystem = new GainSystem();
     this.environmentSystem = new EnvironmentSystem(this.el);
     this.nameTagSystem = new NameTagVisibilitySystem(this.el);
+    // MOD: Added iframe system to tick ordering
+    this.iframeSystem = new IframeSystem(this.el);
   },
 
   tick(t, dt) {

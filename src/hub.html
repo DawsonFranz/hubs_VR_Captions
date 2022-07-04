@@ -826,6 +826,25 @@
                 </a-entity>
             </template>
 
+            <!-- MOD: webpage iframe -->
+            <template id="interactable-iframe-media">
+                <a-entity
+                    geometry="primitive: box; width: 1; height: 1; depth: 1"
+                    material="color: red"                
+                    class="interactable"
+                    is-remote-hover-target
+                    hoverable-visuals
+                    tags="isHandCollisionTarget: true; isHoldable: true; offersRemoteConstraint: true; offersHandConstraint: true;"
+                    body-helper="type: dynamic; mass: 1; collisionFilterGroup: 1; collisionFilterMask: 31;"
+                    shape-helper="type: box"
+                    set-unowned-body-kinematic
+                    floaty-object="modifyGravityOnRelease: true; autoLockOnLoad: true; gravitySpeedLimit: 0; reduceAngularFloat: true;"
+                    set-yxz-order
+                    destroy-at-extreme-distances
+                    matrix-auto-update
+                ></a-entity>
+          </template>
+
             <!-- TODO: All of these positions are assuming 16:9 - need to actually reposition based on video resolution -->
 
             <template id="video-hover-menu">
