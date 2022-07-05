@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import styles from "../assets/stylesheets/presence-log.scss";
@@ -8,6 +8,74 @@ import { coerceToUrl } from "../utils/media-utils";
 import { formatMessageBody } from "../utils/chat-message";
 import { createPlaneBufferGeometry } from "../utils/three-utils";
 import HubsTextureLoader from "../loaders/HubsTextureLoader";
+
+import { useMicrophoneStatus } from "./room/useMicrophoneStatus"
+
+const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+const SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
+const SpeechRecognitionEvent = window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+
+export const ClosedCaptionsMenu = ({scene}) => {
+
+  var recognition = new SpeechRecognition()
+
+  // Grammar list - used if you want to recognize only specific words and then do specific actions onmatch/onnomatch
+
+  // const colors = [ 'aqua' , 'azure' , 'beige', 'bisque', 'black', 'blue', 'brown', 'chocolate', 'coral', 'taco' ];
+  // var grammar = '#JSGF V1.0; grammar colors; public <color> = ' + colors.join(' | ') + ' ;'
+  // var speechRecognitionList = new SpeechGrammarList()
+  //speechRecognitionList.addFromString(grammar, 1)
+  //recognition.grammars = speechRecognitionList;
+
+  recognition.continuous = true;
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  console.log(scene);
+  const { isMicMuted, isMicEnabled } = useMicrophoneStatus(scene);
+
+  let final_transcript = "";
+  
+  useEffect(() => {
+    console.log("+++++ Voice recognition started! +++++");
+    recognition.start();
+
+    if (isMicMuted === true){
+      console.log("----- Voice recognition stopped! -----");
+      recognition.stop();
+    }
+
+    recognition.onresult = (event) => {
+      // Create the interim transcript string locally because we don't want it to persist like final transcript
+      let interim_transcript = "";
+      // Loop through the results from the speech recognition object.
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        // If the result item is Final, add it to Final Transcript, Else add it to Interim transcript
+        if (event.results[i].isFinal) {
+          final_transcript += event.results[i][0].transcript;
+        } else {
+          interim_transcript += event.results[i][0].transcript;
+        }
+
+        console.log("event.results["+i+"].transcript: " + event.results[i].transcript);
+
+        // Also message something in the console if a specific word is found
+        let resultArray = event.results[i][0].transcript.split(' ');
+        resultArray.forEach(word => {
+
+          if (word === "taco"){
+            console.log("TACO HEARD!");
+          }
+        }) 
+      }
+      // After a voice recognition result is found, we log it into the console
+      console.log(final_transcript)
+      spawnCaptionMessage(final_transcript);
+    }
+  }); 
+  return (isMicEnabled && !isMicMuted ? final_transcript : null);
+}
 
 const textureLoader = new HubsTextureLoader();
 
@@ -111,7 +179,7 @@ export async function spawnCaptionMessage(body, from) {
 
 // Constructor - unsure if this part is needed since it's based on buttons
 
-export default function CaptionMessage(props) {
+export function CaptionMessage(props) {
   const { content } = messageBodyDom(props.body, props.name, props.sessionId, props.onViewProfile);
 
   return (

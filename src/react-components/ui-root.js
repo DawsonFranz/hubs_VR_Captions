@@ -95,6 +95,8 @@ import { SpectatingLabel } from "./room/SpectatingLabel";
 import { SignInMessages } from "./auth/SignInModal";
 import { MediaDevicesEvents } from "../utils/media-devices-utils";
 
+import { ClosedCaptionsMenu } from "./closed-captions";
+
 const avatarEditorDebug = qsTruthy("avatarEditorDebug");
 
 const IN_ROOM_MODAL_ROUTER_PATHS = ["/media"];
@@ -1416,6 +1418,11 @@ class UIRoot extends Component {
                       scene={this.props.scene}
                       store={this.props.store}
                     />
+                    
+                    <ClosedCaptionsMenu
+                      scene={this.props.scene}
+                    />
+                    
                     {(showRtcDebugPanel || showAudioDebugPanel) && (
                       <RTCDebugPanel
                         history={this.props.history}
