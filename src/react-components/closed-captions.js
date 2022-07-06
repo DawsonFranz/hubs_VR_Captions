@@ -18,6 +18,7 @@ const SpeechRecognitionEvent = window.SpeechRecognitionEvent || webkitSpeechReco
 export const ClosedCaptionsMenu = ({scene}) => {
 
   var recognition = new SpeechRecognition()
+  var recognizing = false;
 
   // Grammar list - used if you want to recognize only specific words and then do specific actions onmatch/onnomatch
 
@@ -32,19 +33,22 @@ export const ClosedCaptionsMenu = ({scene}) => {
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
-  console.log(scene);
+  //console.log(scene);
   const { isMicMuted, isMicEnabled } = useMicrophoneStatus(scene);
 
   let final_transcript = "";
   
   useEffect(() => {
-    console.log("+++++ Voice recognition started! +++++");
-    recognition.start();
 
-    if (isMicMuted === true){
-      console.log("----- Voice recognition stopped! -----");
+    if(recognizing === false){
+      recognition.start();
+    }
+
+    if (isMicMuted || !isMicEnabled){
       recognition.stop();
     }
+
+    // Do this when the mic detects words:
 
     recognition.onresult = (event) => {
       // Create the interim transcript string locally because we don't want it to persist like final transcript
@@ -58,7 +62,7 @@ export const ClosedCaptionsMenu = ({scene}) => {
           interim_transcript += event.results[i][0].transcript;
         }
 
-        console.log("event.results["+i+"].transcript: " + event.results[i].transcript);
+        console.log("event.results["+i+"][0].transcript: " + event.results[i][0].transcript);
 
         // Also message something in the console if a specific word is found
         let resultArray = event.results[i][0].transcript.split(' ');
@@ -69,10 +73,20 @@ export const ClosedCaptionsMenu = ({scene}) => {
           }
         }) 
       }
-      // After a voice recognition result is found, we log it into the console
-      console.log(final_transcript)
+      // After a voice recognition result is found, we spawn it as a caption
+      //console.log(final_transcript)
       spawnCaptionMessage(final_transcript);
     }
+
+    recognition.onstart = function() {
+      recognizing = true;
+      console.log("+++++ Voice recognition started! +++++");
+    };
+
+    recognition.onstop = function() {
+      recognizing = false;
+      console.log("----- Voice recognition stopped! -----");
+    };
   }); 
   return (isMicEnabled && !isMicMuted ? final_transcript : null);
 }
@@ -155,7 +169,7 @@ export async function spawnCaptionMessage(body, from) {
   // TODO: Expand to multiple caption types!
 
   // No captions if show captions is off in preferences (window.APP.store contains a lot of the preference info)
-  console.log("CaptionType:" + window.APP.store.state.preferences.captionType1);
+  console.log("CaptionType1:" + window.APP.store.state.preferences.captionType1);
   if (body.length === 0 || !window.APP.store.state.preferences.captionType1){
     return;
   } 
