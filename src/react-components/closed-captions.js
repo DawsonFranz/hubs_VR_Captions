@@ -10,86 +10,146 @@ import { createPlaneBufferGeometry } from "../utils/three-utils";
 import HubsTextureLoader from "../loaders/HubsTextureLoader";
 
 import { useMicrophoneStatus } from "./room/useMicrophoneStatus"
+import {Text} from 'troika-three-text'
 
+
+// CONSTANT/UNCHANGING VARIABLES
 const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
 const SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
 const SpeechRecognitionEvent = window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
 
+
+// RECOGNITION CONFIG
+
+var recognition = new SpeechRecognition();
+
+recognition.continuous = true;
+recognition.lang = 'en-US';
+recognition.interimResults = true;
+recognition.maxAlternatives = 1;
+
+// OTHER VARIABLES
+
+let final_transcript = "";
+let recognizing = false;
+
+
+// AUTO CAPTION TEXT BLOCK!
+
+  // Set default caption properties to configure:
+  const myText = new Text();
+
+  // TODO: Make sans serif, overflow to next line
+  myText.text = 'Hello world WHEEEE!'
+  myText.textAlign = "center"
+  myText.overflowWrap = "break-word"
+  myText.anchorX = "center"
+  myText.fontSize = .5
+  myText.position.y = 5
+  myText.position.x = 0
+  myText.position.z = 0
+  myText.color = 0x000000
+  myText.maxWidth = 8
+
+console.log("+++++ Closed Captions voice recognition file started! +++++");
+
+// UI Element, used in uiroot.js
+
 export const ClosedCaptionsMenu = ({scene}) => {
-
-  var recognition = new SpeechRecognition()
-  var recognizing = false;
-
-  // Grammar list - used if you want to recognize only specific words and then do specific actions onmatch/onnomatch
-
-  // const colors = [ 'aqua' , 'azure' , 'beige', 'bisque', 'black', 'blue', 'brown', 'chocolate', 'coral', 'taco' ];
-  // var grammar = '#JSGF V1.0; grammar colors; public <color> = ' + colors.join(' | ') + ' ;'
-  // var speechRecognitionList = new SpeechGrammarList()
-  //speechRecognitionList.addFromString(grammar, 1)
-  //recognition.grammars = speechRecognitionList;
-
-  recognition.continuous = true;
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  //console.log(scene);
+  
   const { isMicMuted, isMicEnabled } = useMicrophoneStatus(scene);
 
-  let final_transcript = "";
-  
+  //console.log(scene);
+  document.querySelector("a-scene").object3D.add(myText)
+
+  // TODO: FIX USEEFFECT HOOK! Make sure it doesn't run things too many times!
   useEffect(() => {
-
-    if(recognizing === false){
-      recognition.start();
-    }
-
+    //console.log("USEEFFECT")
     if (isMicMuted || !isMicEnabled){
-      recognition.stop();
-    }
-
-    // Do this when the mic detects words:
-
-    recognition.onresult = (event) => {
-      // Create the interim transcript string locally because we don't want it to persist like final transcript
-      let interim_transcript = "";
-      // Loop through the results from the speech recognition object.
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        // If the result item is Final, add it to Final Transcript, Else add it to Interim transcript
-        if (event.results[i].isFinal) {
-          final_transcript += event.results[i][0].transcript;
-        } else {
-          interim_transcript += event.results[i][0].transcript;
-        }
-
-        console.log("event.results["+i+"][0].transcript: " + event.results[i][0].transcript);
-
-        // Also message something in the console if a specific word is found
-        let resultArray = event.results[i][0].transcript.split(' ');
-        resultArray.forEach(word => {
-
-          if (word === "taco"){
-            console.log("TACO HEARD!");
-          }
-        }) 
-      }
-      // After a voice recognition result is found, we spawn it as a caption
-      //console.log(final_transcript)
-      spawnCaptionMessage(final_transcript);
-    }
-
-    recognition.onstart = function() {
-      recognizing = true;
-      console.log("+++++ Voice recognition started! +++++");
-    };
-
-    recognition.onstop = function() {
-      recognizing = false;
       console.log("----- Voice recognition stopped! -----");
-    };
+      recognition.stop();
+      recognizing = false
+    }
+    else{
+      if(recognizing === false){
+        console.log("+++++ Voice recognition started! +++++");
+        recognizing = true
+        recognition.start()
+      }
+    }
   }); 
-  return (isMicEnabled && !isMicMuted ? final_transcript : null);
+  return (isMicEnabled && !isMicMuted ? true : null);
 }
+
+// BUG: Breaks when going in and out of browser -- needs to be fixed -- TEST?
+
+// Do this when the mic detects words:
+
+  recognition.onresult = (event) => {
+
+    //console.log("RECOGNITION ONRESULT")
+
+    // Create the interim transcript string locally because we don't want it to persist like final transcript
+    let interim_transcript = "";
+
+    // Loop through the results from the speech wrecognition object.
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+
+      //console.log("event.results["+i+"][0].transcript: " + event.results[i][0].transcript);
+
+      // If the result item is Final, add it to Final Transcript, Else add it to Interim transcript
+      if (event.results[i].isFinal) {
+        final_transcript += event.results[i][0].transcript;
+      } 
+      else {
+        interim_transcript += event.results[i][0].transcript;
+        // Update the text live based on interim/temp transcript
+      }
+
+      // ENABLE IF YOU WANT TO: Also message something in the console if a specific word is found
+
+        // let resultArray = event.results[i][0].transcript.split(' ');
+        // resultArray.forEach(word => {
+        //   if (word === "taco"){
+        //     console.log("TACO HEARD!");
+        //   }
+        // }) 
+
+      myText.text = interim_transcript;
+      myText.sync()
+    }
+
+    if(final_transcript.length != 0){
+
+      console.log("final result: " + final_transcript)
+      
+      // After we finish a voice recognition event and have a final transcript, set the caption text to it
+      myText.text = final_transcript
+      myText.sync()
+
+      // Then spawn caption bubbles, with extra going over MAX_CHARS (these can be separate later)
+      const MAX_CHARS = 64;
+
+      while(final_transcript.length > MAX_CHARS){
+        let str = "";
+        str = final_transcript.substring(0,MAX_CHARS);
+        spawnCaptionMessage(str);
+        final_transcript = final_transcript.substring(MAX_CHARS);
+      }
+      // If there's an extra bubble at the end
+      spawnCaptionMessage(final_transcript);
+
+      // Make sure transcript is empty before next recognition event!
+      final_transcript = ""
+    }
+  }
+
+  // This doesn't happen with recognition continuous (only when exit window)
+  recognition.onspeechend = (event) => {
+    console.log("ONSPEECHEND")
+    recognition.stop();
+    recognizing = false;
+  }
 
 const textureLoader = new HubsTextureLoader();
 
@@ -130,7 +190,7 @@ function renderCaptionMessage(body, from, allowEmojiRender) {
   const isEmoji = allowEmojiRender && emoji;
   const el = document.createElement("div");
   el.setAttribute("class", `${styles.presenceLog} ${styles.presenceLogSpawn}`);
-  // TODO: THIS is where the caption is actually added to the document/scene??????
+  // THIS is where the caption is actually added to the document??????
   document.body.appendChild(el);
 
   const entryDom = (
@@ -169,7 +229,7 @@ export async function spawnCaptionMessage(body, from) {
   // TODO: Expand to multiple caption types!
 
   // No captions if show captions is off in preferences (window.APP.store contains a lot of the preference info)
-  console.log("CaptionType1:" + window.APP.store.state.preferences.captionType1);
+  //console.log("CaptionType1:" + window.APP.store.state.preferences.captionType1);
   if (body.length === 0 || !window.APP.store.state.preferences.captionType1){
     return;
   } 
