@@ -125,6 +125,7 @@ export const SCHEMA = {
         enableDynamicShadows: { type: "bool", default: false },
         // Adding custom caption types to the preferences menu
         captionType1: { type: "bool", default: false },
+        captionType2: { type: "bool", default: false },
         disableSoundEffects: { type: "bool", default: false },
         disableMovement: { type: "bool", default: false },
         disableBackwardsMovement: { type: "bool", default: false },

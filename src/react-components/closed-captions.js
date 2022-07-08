@@ -18,49 +18,95 @@ const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
 const SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
 const SpeechRecognitionEvent = window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
 
-
 // RECOGNITION CONFIG
 
 var recognition = new SpeechRecognition();
 
 recognition.continuous = true;
-recognition.lang = 'en-US';
+recognition.lang = 'en-us';
 recognition.interimResults = true;
 recognition.maxAlternatives = 1;
 
 // OTHER VARIABLES
 
-let final_transcript = "";
-let recognizing = false;
-
-
-// AUTO CAPTION TEXT BLOCK!
-
-  // Set default caption properties to configure:
-  const myText = new Text();
-
-  // TODO: Make sans serif, overflow to next line
-  myText.text = 'Hello world WHEEEE!'
-  myText.textAlign = "center"
-  myText.overflowWrap = "break-word"
-  myText.anchorX = "center"
-  myText.fontSize = .5
-  myText.position.y = 5
-  myText.position.x = 0
-  myText.position.z = 0
-  myText.color = 0x000000
-  myText.maxWidth = 8
+var final_transcript = "";
+var recognizing = false;
 
 console.log("+++++ Closed Captions voice recognition file started! +++++");
 
-// UI Element, used in uiroot.js
+// TODO: Making this global for now; not sure how to nest within bb-textbox objects yet, but wanted to get it working first
+var captionText = initCaptionType2();
+
+AFRAME.registerComponent('bb-textbox', {
+  init: function () {
+    // This will be called after the entity has properly attached and loaded.
+
+    this.el.setAttribute("offset-relative-to", { target: "#avatar-pov-node", offset: { x: 0, y: 0, z: -5 } });
+    this.el.setAttribute("geometry", { primitive: "box", width: 10, height: 3, depth: 1 });
+    this.el.setAttribute("material", { color: "black" });
+    this.el.setAttribute("billboard", true)
+
+    // Add child captionText object
+    this.el.object3D.add(captionText);
+
+    console.log('I am ready!');
+    console.log(captionText)
+  },
+  tick: function () {
+    this.el.setAttribute("offset-relative-to", { target: "#avatar-pov-node", offset: { x: 0, y: 0, z: -5 } });
+    this.el.object3D.matrixNeedsUpdate = true;
+  }
+  // Can add update on speechrecognitionevent(?)
+});
+
+function initCaptionType2() {
+
+// AUTO CAPTION TEXT BLOCK!
+  // Set default caption properties to configure:
+  const ct = new Text();
+
+    // TODO: Make sans serif, overflow to next line
+    ct.text = 'Hello world WHEEEE!'
+    ct.textAlign = "center"
+    ct.overflowWrap = "break-word"
+    ct.anchorX = "center"
+    ct.anchorY = "middle"
+    ct.maxWidth = 8
+
+    ct.fontSize = .5
+    ct.position.y = 0
+    ct.position.x = 0
+    ct.position.z = .75
+    ct.color = 0xFFFFFF
+
+  return ct;
+}
+
+function updateCaptionType2(newText) {
+  if(newText != ""){
+    captionText.text = newText;
+    captionText.sync();
+  }
+}
+
+// UI Element, used in uiroot.js--pulls in dynamic scene info if needed
 
 export const ClosedCaptionsMenu = ({scene}) => {
-  
-  const { isMicMuted, isMicEnabled } = useMicrophoneStatus(scene);
 
-  //console.log(scene);
-  document.querySelector("a-scene").object3D.add(myText)
+  // We cannot create this every time -- TODO TOMORROW: need to look in another file to see if this exists elsewhere!
+    // (creating element then appending it to the scene)
+    
+  const bbTextboxEl = document.createElement('a-entity');
+  bbTextboxEl.setAttribute('bb-textbox', '');
+  //console.log(bbTextboxEl)
+
+  document.querySelector('a-scene').appendChild(bbTextboxEl)
+
+  // Set it to itself now in the scene?
+  //bbTextboxEl = document.querySelector('a-scene').appendChild(bbTextboxEl)
+  //console.log(bbTextboxEl.object3D);
+
+  const { isMicMuted, isMicEnabled } = useMicrophoneStatus(scene);
 
   // TODO: FIX USEEFFECT HOOK! Make sure it doesn't run things too many times!
   useEffect(() => {
@@ -94,9 +140,7 @@ export const ClosedCaptionsMenu = ({scene}) => {
 
     // Loop through the results from the speech wrecognition object.
     for (let i = event.resultIndex; i < event.results.length; ++i) {
-
-      //console.log("event.results["+i+"][0].transcript: " + event.results[i][0].transcript);
-
+        //console.log("event.results["+i+"][0].transcript: " + event.results[i][0].transcript);
       // If the result item is Final, add it to Final Transcript, Else add it to Interim transcript
       if (event.results[i].isFinal) {
         final_transcript += event.results[i][0].transcript;
@@ -115,8 +159,10 @@ export const ClosedCaptionsMenu = ({scene}) => {
         //   }
         // }) 
 
-      myText.text = interim_transcript;
-      myText.sync()
+      // Caption Type 2 is the troika text in world
+      if(window.APP.store.state.preferences.captionType2){
+        updateCaptionType2(interim_transcript)
+      }
     }
 
     if(final_transcript.length != 0){
@@ -124,21 +170,23 @@ export const ClosedCaptionsMenu = ({scene}) => {
       console.log("final result: " + final_transcript)
       
       // After we finish a voice recognition event and have a final transcript, set the caption text to it
-      myText.text = final_transcript
-      myText.sync()
-
-      // Then spawn caption bubbles, with extra going over MAX_CHARS (these can be separate later)
-      const MAX_CHARS = 64;
-
-      while(final_transcript.length > MAX_CHARS){
-        let str = "";
-        str = final_transcript.substring(0,MAX_CHARS);
-        spawnCaptionMessage(str);
-        final_transcript = final_transcript.substring(MAX_CHARS);
+      if(window.APP.store.state.preferences.captionType2){
+        updateCaptionType2(interim_transcript)
       }
-      // If there's an extra bubble at the end
-      spawnCaptionMessage(final_transcript);
 
+      if(window.APP.store.state.preferences.captionType1){
+        // Then spawn caption bubbles, with extra going over MAX_CHARS (these can be separate later)
+        const MAX_CHARS = 64;
+
+        while(final_transcript.length > MAX_CHARS){
+          let str = "";
+          str = final_transcript.substring(0,MAX_CHARS);
+          spawnCaptionMessage(str);
+          final_transcript = final_transcript.substring(MAX_CHARS);
+        }
+        // If there's an extra bubble at the end
+        spawnCaptionMessage(final_transcript);
+      }
       // Make sure transcript is empty before next recognition event!
       final_transcript = ""
     }
@@ -150,6 +198,9 @@ export const ClosedCaptionsMenu = ({scene}) => {
     recognition.stop();
     recognizing = false;
   }
+
+
+// Below code imported from chat-message.js
 
 const textureLoader = new HubsTextureLoader();
 
@@ -230,7 +281,7 @@ export async function spawnCaptionMessage(body, from) {
 
   // No captions if show captions is off in preferences (window.APP.store contains a lot of the preference info)
   //console.log("CaptionType1:" + window.APP.store.state.preferences.captionType1);
-  if (body.length === 0 || !window.APP.store.state.preferences.captionType1){
+  if (body.length === 0){
     return;
   } 
 
@@ -245,7 +296,6 @@ export async function spawnCaptionMessage(body, from) {
   }
 
   // If not a URL, spawn as a text bubble
-
   const [blob] = await renderCaptionMessage(body, from, true);
   document.querySelector("a-scene").emit("add_media", new File([blob], "message.png", { type: "image/png" }));
 }
