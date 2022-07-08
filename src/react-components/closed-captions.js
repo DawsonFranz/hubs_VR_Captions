@@ -31,6 +31,7 @@ recognition.maxAlternatives = 1;
 
 var final_transcript = "";
 var recognizing = false;
+var muted = true; 
 
 console.log("+++++ Closed Captions voice recognition file started! +++++");
 
@@ -40,43 +41,60 @@ var captionText = initCaptionType2();
 AFRAME.registerComponent('bb-textbox', {
   init: function () {
     // This will be called after the entity has properly attached and loaded.
-
-    this.el.setAttribute("offset-relative-to", { target: "#avatar-pov-node", offset: { x: 0, y: 0, z: -5 } });
-    this.el.setAttribute("geometry", { primitive: "box", width: 10, height: 3, depth: 1 });
-    this.el.setAttribute("material", { color: "black" });
+    this.el.setAttribute("geometry", { primitive: "box", width: 4, height: 1, depth: .1 });
+    // Slightly less than pure black, with no lighting effects
+    this.el.setAttribute("material", { color: "#080808", shader: "flat" });
     this.el.setAttribute("billboard", true)
 
     // Add child captionText object
     this.el.object3D.add(captionText);
 
-    console.log('I am ready!');
+    console.log('Caption Text: I am ready!');
     console.log(captionText)
   },
   tick: function () {
-    this.el.setAttribute("offset-relative-to", { target: "#avatar-pov-node", offset: { x: 0, y: 0, z: -5 } });
+    // If caption type 2 enabled, follow the user w/ lag
+    if(window.APP.store.state.preferences.captionType2){
+      this.el.setAttribute("visible", true)
+      this.el.setAttribute("follow-in-fov", { 
+        target: "#avatar-pov-node", 
+        offset: { x: 0, y: 0, z: -3 },
+        // Default speed .003 = good for lag, .01 good for headlocked
+        speed: .003,
+        // Default angle 45 w/ y=1 good for on floor, 
+        angle:  20 
+      })
+    }
+    else{
+      this.el.setAttribute("visible", false)
+    }
+    // enable to make it go up
+    //this.el.object3D.position.y += .001;
     this.el.object3D.matrixNeedsUpdate = true;
   }
   // Can add update on speechrecognitionevent(?)
 });
 
+// AUTO CAPTION TEXT BLOCK!
 function initCaptionType2() {
 
-// AUTO CAPTION TEXT BLOCK!
   // Set default caption properties to configure:
   const ct = new Text();
 
     // TODO: Make sans serif, overflow to next line
     ct.text = 'Hello world WHEEEE!'
+    // Default font: roboto
     ct.textAlign = "center"
     ct.overflowWrap = "break-word"
     ct.anchorX = "center"
     ct.anchorY = "middle"
-    ct.maxWidth = 8
+    ct.maxWidth = 3
 
-    ct.fontSize = .5
+    ct.fontSize = .15
+    // Change the y depending on the angle of the captions!
     ct.position.y = 0
     ct.position.x = 0
-    ct.position.z = .75
+    ct.position.z = .25
     ct.color = 0xFFFFFF
 
   return ct;
@@ -93,20 +111,21 @@ function updateCaptionType2(newText) {
 
 export const ClosedCaptionsMenu = ({scene}) => {
 
-  // We cannot create this every time -- TODO TOMORROW: need to look in another file to see if this exists elsewhere!
-    // (creating element then appending it to the scene)
+  // Only create caption box once--don't want to duplicate it!
     
-  const bbTextboxEl = document.createElement('a-entity');
-  bbTextboxEl.setAttribute('bb-textbox', '');
-  //console.log(bbTextboxEl)
+  if(document.querySelector("a-entity[bb-textbox]") == null){
 
-  document.querySelector('a-scene').appendChild(bbTextboxEl)
+    var bbTextboxEl = document.createElement('a-entity');
+    bbTextboxEl.setAttribute('id', 'textbox-main');
+    bbTextboxEl.setAttribute('bb-textbox', '');
 
-  // Set it to itself now in the scene?
-  //bbTextboxEl = document.querySelector('a-scene').appendChild(bbTextboxEl)
-  //console.log(bbTextboxEl.object3D);
+    // Append textbox to the scene
+    AFRAME.scenes[0].appendChild(bbTextboxEl);
+  }
 
   const { isMicMuted, isMicEnabled } = useMicrophoneStatus(scene);
+
+  muted = isMicMuted;
 
   // TODO: FIX USEEFFECT HOOK! Make sure it doesn't run things too many times!
   useEffect(() => {
@@ -119,8 +138,8 @@ export const ClosedCaptionsMenu = ({scene}) => {
     else{
       if(recognizing === false){
         console.log("+++++ Voice recognition started! +++++");
+        recognition.start();
         recognizing = true
-        recognition.start()
       }
     }
   }); 
@@ -130,7 +149,6 @@ export const ClosedCaptionsMenu = ({scene}) => {
 // BUG: Breaks when going in and out of browser -- needs to be fixed -- TEST?
 
 // Do this when the mic detects words:
-
   recognition.onresult = (event) => {
 
     //console.log("RECOGNITION ONRESULT")
@@ -192,12 +210,18 @@ export const ClosedCaptionsMenu = ({scene}) => {
     }
   }
 
-  // This doesn't happen with recognition continuous (only when exit window)
-  recognition.onspeechend = (event) => {
-    console.log("ONSPEECHEND")
-    recognition.stop();
-    recognizing = false;
-  }
+  // Say the following:
+
+  // I am Juan. No, I am the ONE AND ONLY JUAN!
+
+  // Makes sure recognition is actually continuous (if they exit the window, etc. but still have mic on)
+  recognition.addEventListener('end', () => {
+    console.log("speechendEventListener - muted?: " + muted)
+    if (!muted){
+      recognition.start();
+      recognizing = true;
+    }
+  });
 
 
 // Below code imported from chat-message.js
