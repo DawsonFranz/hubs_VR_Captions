@@ -2,7 +2,7 @@ import "./utils/configs";
 import { getAbsoluteHref } from "./utils/media-url-utils";
 import { isValidSceneUrl } from "./utils/scene-url-utils";
 import { spawnChatMessage } from "./react-components/chat-message";
-import { spawnCaptionMessage } from "./react-components/closed-captions";
+//import { spawnCaptionMessage } from "./react-components/closed-captions";
 import { SOUND_CHAT_MESSAGE, SOUND_QUACK, SOUND_SPECIAL_QUACK } from "./systems/sound-effects-system";
 import ducky from "./assets/models/DuckyMesh.glb";
 import { EventTarget } from "event-target-shim";
@@ -90,11 +90,11 @@ export default class MessageDispatch extends EventTarget {
             spawnChatMessage(sentence);
         }
         break;
-      case "caption":
-        if (args[0]) {
-            const sentence = args.join(" ");
-            spawnCaptionMessage(sentence);
-        }
+      // case "caption":
+      //   if (args[0]) {
+      //       const sentence = args.join(" ");
+      //       spawnCaptionMessage(sentence);
+      //   }
         break;
       case "fly":
         if (this.scene.systems["hubs-systems"].characterController.fly) {

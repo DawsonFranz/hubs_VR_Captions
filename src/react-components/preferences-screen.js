@@ -371,6 +371,14 @@ const preferenceLabels = defineMessages({
     id: "preferences-screen.preference.caption-type-2",
     defaultMessage: "Caption Type 2"
   },
+  captionType3: {
+    id: "preferences-screen.preference.caption-type-3",
+    defaultMessage: "Caption Type 3"
+  },
+  captionType4: {
+    id: "preferences-screen.preference.caption-type-4",
+    defaultMessage: "Caption Type 4"
+  },
   disableSoundEffects: {
     id: "preferences-screen.preference.disable-sound-effects",
     defaultMessage: "Disable Sound Effects"
@@ -1041,6 +1049,14 @@ class PreferencesScreen extends Component {
           },
           {
             key: "captionType2",
+            prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
+          },
+          {
+            key: "captionType3",
+            prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
+          },
+          {
+            key: "captionType4",
             prefType: PREFERENCE_LIST_ITEM_TYPE.CHECK_BOX
           },
           {
