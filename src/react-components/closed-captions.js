@@ -13,19 +13,35 @@ import { useMicrophoneStatus } from "./room/useMicrophoneStatus"
 import {Text} from 'troika-three-text'
 
 
+import { createSpeechlySpeechRecognition } from '@speechly/speech-recognition-polyfill';
+
+const appId = 'd277027f-3054-423b-b596-2d22a5daf50e';
+const SpeechlySpeechRecognition = createSpeechlySpeechRecognition(appId);
+
 // CONSTANT/UNCHANGING VARIABLES
-const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
-const SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
-const SpeechRecognitionEvent = window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+
+var recognition = null;
+
+try {
+
+  const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+  const SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
+  const SpeechRecognitionEvent = window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+  var recognition = new SpeechlySpeechRecognition();
+
+}
+catch(e){
+  if (SpeechlySpeechRecognition.hasBrowserSupport){
+    var recognition = new SpeechlySpeechRecognition();
+  }
+}
 
 // RECOGNITION CONFIG
-
-var recognition = new SpeechRecognition();
 
 recognition.continuous = true;
 recognition.lang = 'en-us';
 recognition.interimResults = true;
-recognition.maxAlternatives = 1;
+recognition.maxAlternatives = 0;
 
 // OTHER VARIABLES
 
@@ -45,6 +61,10 @@ AFRAME.registerComponent('bb-textbox', {
     // Slightly less than pure black, with no lighting effects
     this.el.setAttribute("material", { color: "#080808", shader: "flat" });
     this.el.setAttribute("billboard", true)
+
+// ADD TO APPEAR CAPTION TYPE
+    // If we want offset/appear behavior turn this on
+      // this.el.setAttribute("offset-relative-to", {target: "#avatar-pov-node", offset: { x: 0, y: 0, z: -3 }});
 
     // Add child captionText object
     this.el.object3D.add(captionText);
@@ -71,6 +91,12 @@ AFRAME.registerComponent('bb-textbox', {
     // enable to make it go up
     //this.el.object3D.position.y += .001;
     this.el.object3D.matrixNeedsUpdate = true;
+  },
+
+  appear: function (){
+    console.log("appear ran!")
+    //this.el.object3D.matrixNeedsUpdate = true;
+    this.el.components["offset-relative-to"].updateOffset();
   }
   // Can add update on speechrecognitionevent(?)
 });
@@ -82,18 +108,19 @@ function initCaptionType2() {
   const ct = new Text();
 
     // TODO: Make sans serif, overflow to next line
-    ct.text = 'Hello world WHEEEE!'
+      //Note: line width is 22 Ms: MMMMMMMMMMMMMMMMMMMMMM
+    ct.text = 'Live captioning system is now on!'
     // Default font: roboto
-    ct.textAlign = "center"
+    ct.textAlign = "left"
     ct.overflowWrap = "break-word"
-    ct.anchorX = "center"
-    ct.anchorY = "middle"
+    ct.anchorX = "left"
+    ct.anchorY = "top-baseline"
     ct.maxWidth = 3
 
     ct.fontSize = .15
     // Change the y depending on the angle of the captions!
-    ct.position.y = 0
-    ct.position.x = 0
+    ct.position.y = .15
+    ct.position.x = -1.5
     ct.position.z = .25
     ct.color = 0xFFFFFF
 
@@ -189,7 +216,9 @@ export const ClosedCaptionsMenu = ({scene}) => {
       
       // After we finish a voice recognition event and have a final transcript, set the caption text to it
       if(window.APP.store.state.preferences.captionType2){
-        updateCaptionType2(interim_transcript)
+        updateCaptionType2(final_transcript)
+    // ADD TO APPEAR CAPTION TYPE
+        //document.querySelector("a-entity[bb-textbox]").components["bb-textbox"].appear();
       }
 
       if(window.APP.store.state.preferences.captionType1){
@@ -215,13 +244,13 @@ export const ClosedCaptionsMenu = ({scene}) => {
   // I am Juan. No, I am the ONE AND ONLY JUAN!
 
   // Makes sure recognition is actually continuous (if they exit the window, etc. but still have mic on)
-  recognition.addEventListener('end', () => {
-    console.log("speechendEventListener - muted?: " + muted)
-    if (!muted){
-      recognition.start();
-      recognizing = true;
-    }
-  });
+  // recognition.addEventListener('end', () => {
+  //   console.log("speechendEventListener - muted?: " + muted)
+  //   if (!muted){
+  //     recognition.start();
+  //     recognizing = true;
+  //   }
+  // });
 
 
 // Below code imported from chat-message.js
