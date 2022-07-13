@@ -95,7 +95,7 @@ export default class MessageDispatch extends EventTarget {
       //       const sentence = args.join(" ");
       //       spawnCaptionMessage(sentence);
       //   }
-        break;
+      // break;
       case "fly":
         if (this.scene.systems["hubs-systems"].characterController.fly) {
           this.scene.systems["hubs-systems"].characterController.enableFly(false);

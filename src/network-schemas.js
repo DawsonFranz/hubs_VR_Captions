@@ -195,6 +195,18 @@ function registerNetworkSchemas() {
     ]
   });
 
+  // MOD: Attempting to add custom transcript text
+  NAF.schemas.add({
+    template: "#transcript-media",
+    components: [
+      {
+        component: "transcript-text",
+        property: "value"
+      }
+    ],
+    nonAuthorizedComponents: []
+  });
+
   NAF.schemas.add({
     template: "#static-controlled-media",
     components: [

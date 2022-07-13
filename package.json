@@ -111,6 +111,7 @@
     "lib-hubs": "github:mozillareality/lib-hubs#master",
     "linkify-it": "^2.0.3",
     "markdown-it": "^8.4.2",
+    "microsoft-cognitiveservices-speech-sdk": "^1.22.0",
     "moving-average": "^1.0.0",
     "networked-aframe": "github:mozillareality/networked-aframe#master",
     "nipplejs": "github:mozillareality/nipplejs#mr-social-client/master",
@@ -130,6 +131,7 @@
     "react-popper-2": "npm:react-popper@^2.2.3",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
+    "react-speech-recognition": "^3.9.1",
     "react-textarea-autosize": "^8.2.0",
     "react-use-css-breakpoints": "^1.0.4",
     "resize-observer-polyfill": "^1.5.1",
@@ -144,6 +146,7 @@
     "troika-three-text": "^0.45.0",
     "use-clipboard-copy": "^0.1.2",
     "uuid": "^3.2.1",
+    "web-speech-cognitive-services": "^7.1.0",
     "webrtc-adapter": "^7.7.0",
     "webxr-polyfill": "^2.0.3",
     "zip-loader": "^1.1.0"
