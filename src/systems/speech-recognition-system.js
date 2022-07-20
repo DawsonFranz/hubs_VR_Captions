@@ -2,10 +2,10 @@ export class SpeechRecognitionSystem {
     constructor(scene) {
       this.scene = scene;
       this.transcriptText = "";
-      this.entity = this.init();
-      // Need to pass data through onUpdate
-      //this.scene.addEventListener("update-transcript", text => this.onUpdateTranscript);
-      console.log(this)
+      //this.entity = this.init();
+        // Need to pass data through onUpdate
+        //this.scene.addEventListener("update-transcript", text => this.onUpdateTranscript);
+      //console.log(this)
     }
   
     init = () => {
